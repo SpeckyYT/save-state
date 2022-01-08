@@ -1,0 +1,20 @@
+import './src'
+
+state = @save_state::new()
+
+state.bit.display(100,25+30)
+
+wait(0.1)
+
+switch state.bit {
+    ==0: (){
+        state.save(true)
+        -> BG.pulse(rgb(1,0,0), 0.1, 0.2, 0.1)
+        -> GROUND.pulse(rgb(1,0,0), 0.1, 0.2, 0.1)
+    }(),
+    ==1: (){
+        state.save(false)
+        -> BG.pulse(rgb(0,0,1), 0.1, 0.2, 0.1)
+        -> GROUND.pulse(rgb(0,0,1), 0.1, 0.2, 0.1)
+    }(),
+}
