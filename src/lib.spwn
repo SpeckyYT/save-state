@@ -35,12 +35,14 @@ impl @save_state {
         $.extend_trigger_func(0g, (){
             on(collision(a.b, b.b), !{
                 c.g.toggle_off()
+                // falsy state
             })
             on(collision(a.b, c.b), !{
                 b.g.toggle_off()
+                // truthy state
                 bit++
             })
-            a.g.move(x = 0, y = 25)
+            a.g.move(x = 0, y = 25, duration = 0) // collider
         })
 
         return @save_state::{
