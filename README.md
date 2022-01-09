@@ -2,6 +2,8 @@
 
 Saves a bit across attempts.
 
+*currently only 1 bit works*
+
 ```spwn
 import "save-state"
 

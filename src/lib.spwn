@@ -5,7 +5,7 @@ setup_distance = 100
 section_move = 40
 offset = {
     x: 50,
-    y: 10000,
+    y: 2175,
 }
 let setup_count = 0
 
@@ -29,6 +29,7 @@ impl @save_state {
             hitbox(a.b, a.g).with(Y, 0 + offset.y).with(DYNAMIC_BLOCK, true).add()
             hitbox(b.b, b.g).with(Y, 60 + offset.y).add()
             hitbox(c.b, c.g).with(Y, 90 + offset.y).add()
+
             bit = counter(bits = 1)
             setup_count++
 
