@@ -2,18 +2,18 @@ import './src'
 
 state = @save_state::new()
 
-state.bit.display(100,25+30)
+state.sum.display(100,25+30)
 
 wait(0.1)
 
-switch state.bit {
+switch state.sum {
     ==0: (){
-        state.save(true)
+        state.save(1)
         -> BG.pulse(rgb(1,0,0), 0.1, 0.2, 0.1)
         -> GROUND.pulse(rgb(1,0,0), 0.1, 0.2, 0.1)
     }(),
     ==1: (){
-        state.save(false)
+        state.save(0)
         -> BG.pulse(rgb(0,0,1), 0.1, 0.2, 0.1)
         -> GROUND.pulse(rgb(0,0,1), 0.1, 0.2, 0.1)
     }(),
