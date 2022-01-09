@@ -20,41 +20,80 @@ hitbox_ids = () => { g: ?g, b: ?b }
 
 type @save_state
 impl @save_state {
-    new: #[constructor] () {
-        a = hitbox_ids()
-        b = hitbox_ids()
-        c = hitbox_ids()
-    
-        hitbox(a.b, a.g).with(Y, 0 + offset.y).with(DYNAMIC_BLOCK, true).add()
-        hitbox(b.b, b.g).with(Y, 60 + offset.y).add()
-        hitbox(c.b, c.g).with(Y, 90 + offset.y).add()
-    
-        bit = counter(bits = 1)
-        setup_count++
-    
-        $.extend_trigger_func(0g, (){
-            on(collision(a.b, b.b), !{
-                c.g.toggle_off()
-                // falsy state
-            })
-            on(collision(a.b, c.b), !{
-                b.g.toggle_off()
-                // truthy state
-                bit++
-            })
-            a.g.move(x = 0, y = 25, duration = 0) // collider
-        })
+    new: #[constructor] (bits: @number = 1) -> @save_state {
+        if bits == 1 {
+            a = hitbox_ids()
+            b = hitbox_ids()
+            c = hitbox_ids()
+        
+            hitbox(a.b, a.g).with(Y, 0 + offset.y).with(DYNAMIC_BLOCK, true).add()
+            hitbox(b.b, b.g).with(Y, 60 + offset.y).add()
+            hitbox(c.b, c.g).with(Y, 90 + offset.y).add()
+            bit = counter(bits = 1)
+            setup_count++
 
-        return @save_state::{
-            bit: bit,
-            block_a: a,
-            block_b: b,
-            block_c: c,
+            $.extend_trigger_func(0g, (){
+                on(collision(a.b, b.b), !{
+                    c.g.toggle_off()
+                    // falsy state
+                })
+                on(collision(a.b, c.b), !{
+                    b.g.toggle_off()
+                    // truthy state
+                    bit++
+                })
+                a.g.move(x = 0, y = 25, duration = 0) // collider
+            })
+
+            return @save_state::{
+                sum: bit,
+                bits: [bit],
+                block_a: [a],
+                block_b: [b],
+                block_c: [c],
+            }
+        } else {
+            states = [@save_state::new(bits = 1) for i in 0..bits]
+            sum = counter(bits = bits)
+
+            $.extend_trigger_func(0g, (){
+                wait(0.02)
+                for i in 0..states.length {
+                    if states[i].sum == 1 {
+                        sum += 2^i
+                    }
+                }
+            })
+
+            return @save_state::{
+                sum: sum,
+                bits: states.map(s => s.bits[0]),
+                block_a: states.map(s => s.block_a[0]),
+                block_b: states.map(s => s.block_a[0]),
+                block_c: states.map(s => s.block_a[0]),
+            }
         }
     },
-    save: (self, value: @bool = true){
-        group = self.block_b.g if value else self.block_c.g
-        group.move(x = section_move, y = 0, duration = 0)
-        group.move(x = -section_move, y = 0, duration = 0.01)
+    save: (self, value: @number | @counter = 1) -> @NULL {
+        switch value {
+            @number: (){
+                let bits = [$.floor(value/(2^i))%2 for i in 0..self.bits.length]
+                for i in 0..bits.length {
+                    group = self.block_b[i].g if value == 1 else self.block_c[i].g
+                    -> group.move(x = section_move, y = 0, duration = 0)
+                    -> group.move(x = -section_move, y = 0, duration = 0.01)
+                }
+            }(),
+            @counter: (){
+                clone = value.clone()
+                for i in 0..self.bits.length {
+                    numb = (clone % 2).to_const(0..2)
+                    group = self.block_b[i].g if numb == 1 else self.block_c[i].g
+                    -> group.move(x = section_move, y = 0, duration = 0)
+                    -> group.move(x = -section_move, y = 0, duration = 0.01)
+                    clone /= 2
+                }
+            }(),
+        }
     },
 }
