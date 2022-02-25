@@ -76,7 +76,7 @@ impl @save_state {
         }
     },
     save: (self, value: @number | @counter = 1) -> @NULL {
-        switch value {
+        match value {
             @number: (){
                 let bits = [$.floor(value/(2^i))%2 for i in 0..self.bits.length]
                 for i in 0..bits.length {
