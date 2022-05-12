@@ -6,7 +6,7 @@ state.sum.display(100,25+30)
 
 wait(0.1)
 
-switch state.sum {
+match state.sum {
     ==0: (){
         state.save(1)
         -> BG.pulse(rgb(1,0,0), 0.1, 0.2, 0.1)
