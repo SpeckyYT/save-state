@@ -1,10 +1,10 @@
 extract obj_props
 extract obj_ids
 
-setup_distance = 100
-section_move = 40
+setup_distance = 200
+section_move = 100
 offset = {
-    x: 50,
+    x: 250,
     y: 2175,
 }
 let setup_count = 0
@@ -16,15 +16,20 @@ hitbox = (block_id: @block, group_id: @group) => obj {
     BLOCK_A: block_id,
 }
 
-hitbox_ids = () => { g: ?g, b: ?b }
+default_hitboxes = [ ?b, ?b ]
+
+hitbox_ids = (index: @number = 0) => {
+    g: ?g,
+    b: ?b if index == 0 else default_hitboxes[index - 1],
+}
 
 type @save_state
 impl @save_state {
-    new: #[constructor] (bits: @number = 1) -> @save_state {
+    new: #[constructor] (bits: @number&>=1 = 1) -> @save_state {
         if bits == 1 {
             a = hitbox_ids()
-            b = hitbox_ids()
-            c = hitbox_ids()
+            b = hitbox_ids(1)
+            c = hitbox_ids(2)
         
             hitbox(a.b, a.g).with(Y, 0 + offset.y).with(DYNAMIC_BLOCK, true).add()
             hitbox(b.b, b.g).with(Y, 60 + offset.y).add()
@@ -43,6 +48,7 @@ impl @save_state {
                     // truthy state
                     bit++
                 })
+                frames(1)
                 a.g.move(x = 0, y = 25, duration = 0) // collider
             })
 
@@ -58,7 +64,7 @@ impl @save_state {
             sum = counter(bits = bits)
 
             $.extend_trigger_func(0g, (){
-                wait(0.02)
+                frames(1)
                 for i in 0..states.length {
                     if states[i].sum == 1 {
                         sum += 2^i
@@ -68,15 +74,16 @@ impl @save_state {
 
             return @save_state::{
                 sum: sum,
-                bits: states.map(s => s.bits[0]),
+                bits: states.map(s => s.sum),
                 block_a: states.map(s => s.block_a[0]),
-                block_b: states.map(s => s.block_a[0]),
-                block_c: states.map(s => s.block_a[0]),
+                block_b: states.map(s => s.block_b[0]),
+                block_c: states.map(s => s.block_c[0]),
             }
         }
     },
-    save: (self, value: @number | @counter = 1) -> @NULL {
+    save: (self, value: @number & >=0 | @counter | @bool) -> @NULL {
         match value {
+            @bool: self.save(value as @number),
             @number: (){
                 let bits = [$.floor(value/(2^i))%2 for i in 0..self.bits.length]
                 for i in 0..bits.length {
