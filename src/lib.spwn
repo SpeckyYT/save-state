@@ -2,7 +2,7 @@ extract obj_props
 extract obj_ids
 
 setup_distance = 200
-section_move = 100
+section_move = 100 / 3
 offset = {
     x: 250,
     y: 2175,
@@ -23,6 +23,11 @@ hitbox_ids = (index: @number = 0) => {
     b: ?b if index == 0 else default_hitboxes[index - 1],
 }
 
+update_section = (group: @group) {
+    -> group.move(x = section_move, y = 0, duration = 0)
+    -> group.move(x = -section_move, y = 0, duration = 0.1) // 0.01
+}
+
 type @save_state
 impl @save_state {
     new: #[constructor] (bits: @number&>=1 = 1) -> @save_state {
@@ -41,10 +46,12 @@ impl @save_state {
             $.extend_trigger_func(0g, (){
                 on(collision(a.b, b.b), !{
                     c.g.toggle_off()
+                    a.g.toggle_off()
                     // falsy state
                 })
                 on(collision(a.b, c.b), !{
                     b.g.toggle_off()
+                    a.g.toggle_off()
                     // truthy state
                     bit++
                 })
@@ -60,11 +67,14 @@ impl @save_state {
                 block_c: [c],
             }
         } else {
-            states = [@save_state::new(bits = 1) for i in 0..bits]
+            // states = [@save_state::new(bits = 1) for i in 0..bits]
+            let states = []
+            for i in 0..bits { states.push(@save_state::new(bits = 1)) }
+
             sum = counter(bits = bits)
 
             $.extend_trigger_func(0g, (){
-                frames(1)
+                frames(3)
                 for i in 0..states.length {
                     if states[i].sum == 1 {
                         sum += 2^i
@@ -87,19 +97,22 @@ impl @save_state {
             @number: (){
                 let bits = [$.floor(value/(2^i))%2 for i in 0..self.bits.length]
                 for i in 0..bits.length {
-                    group = self.block_b[i].g if value == 1 else self.block_c[i].g
-                    -> group.move(x = section_move, y = 0, duration = 0)
-                    -> group.move(x = -section_move, y = 0, duration = 0.01)
+                    update_section(
+                        self.block_b[i].g if bits[i] == 1 else self.block_c[i].g
+                    )
                 }
             }(),
             @counter: (){
                 clone = value.clone()
                 for i in 0..self.bits.length {
-                    numb = (clone % 2).to_const(0..2)
-                    group = self.block_b[i].g if numb == 1 else self.block_c[i].g
-                    -> group.move(x = section_move, y = 0, duration = 0)
-                    -> group.move(x = -section_move, y = 0, duration = 0.01)
-                    clone /= 2
+                    remainder = counter(bits = 1)
+                    clone.divide(2, remainder = remainder)
+                    
+                    if remainder == 1 {
+                        update_section(self.block_b[i].g)
+                    } else {
+                        update_section(self.block_c[i].g)
+                    }
                 }
             }(),
         }

@@ -1,7 +1,7 @@
 import './src/lib.spwn'
 
 
-states = @save_state::new(bits = 3)
+states = @save_state::new(bits = 4)
 
 states.sum.display(200,100)
 
@@ -9,30 +9,7 @@ for i in 0..states.bits.length {
     states.bits[i].display(100, (i+1) * 25)
 }
 
-frames(3)
+frames(3) // 3 frames is the min
 
 states.save(states.sum + 1)
-
-/*
-states = [@save_state::new() for i in 0..4]
-
-sum = counter()
-
-sum.display(30,30)
-
-frames(3)
-for i in 0..states.length {
-    if states[i].sum == 1 {
-        sum += 2^i
-    }
-}
-
-wait(0.5)
-for i in 0..states.length {
-    if states[i].sum == 0 {
-        states[i].save(1)
-        break
-    }
-    states[i].save(0)
-}
-*/
+@log::runtime::flash()

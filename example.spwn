@@ -6,7 +6,7 @@ state.sum.display(100,25+30)
 
 frames(3)
 
-match state.sum as @bool {
+match @bool(state.sum) {
     ==false: (){
         state.save(true)
         @log::runtime::flash(rgb8(255,0,0))
