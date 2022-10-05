@@ -1,6 +1,8 @@
 extract obj_props
 extract obj_ids
 
+type @save_state_global
+
 setup_distance = 200
 section_move = 100 / 3
 offset = {
@@ -25,20 +27,31 @@ hitbox_ids = (index: @number = 0) => {
 
 update_section = (group: @group) {
     -> group.move(x = section_move, y = 0, duration = 0)
-    -> group.move(x = -section_move, y = 0, duration = 0.1) // 0.01
+    -> group.move(x = -section_move, y = 0, duration = 0.01)
 }
+
+-> () {
+    frames(1)
+    let @save_state_global::first_frame = $.trigger_fn_context()
+} ()
+-> () {
+    frames(3)
+    let @save_state_global::third_frame = $.trigger_fn_context()
+} ()
 
 type @save_state
 impl @save_state {
-    new: #[constructor] (bits: @number&>=1 = 1) -> @save_state {
+    new: #[constructor] (bits: @number&>=1 = 1, create_sum: @bool = true) -> @save_state {
         if bits == 1 {
             a = hitbox_ids()
             b = hitbox_ids(1)
             c = hitbox_ids(2)
         
+            // do not invert the sequence of these hitboxes
+            // otherwise the default bit may be different
+            hitbox(b.b, b.g).with(Y, 90 + offset.y).add()
+            hitbox(c.b, c.g).with(Y, 60 + offset.y).add()
             hitbox(a.b, a.g).with(Y, 0 + offset.y).with(DYNAMIC_BLOCK, true).add()
-            hitbox(b.b, b.g).with(Y, 60 + offset.y).add()
-            hitbox(c.b, c.g).with(Y, 90 + offset.y).add()
 
             bit = counter(bits = 1)
             setup_count++
@@ -55,7 +68,8 @@ impl @save_state {
                     // truthy state
                     bit++
                 })
-                frames(1)
+            })
+            $.extend_trigger_func(@save_state_global::first_frame, (){
                 a.g.move(x = 0, y = 25, duration = 0) // collider
             })
 
@@ -73,14 +87,15 @@ impl @save_state {
 
             sum = counter(bits = bits)
 
-            $.extend_trigger_func(0g, (){
-                frames(3)
-                for i in 0..states.length {
-                    if states[i].sum == 1 {
-                        sum += 2^i
+            if create_sum {
+                $.extend_trigger_func(@save_state_global::third_frame, (){
+                    for i in 0..states.length {
+                        if states[i].sum == 1 {
+                            sum += 2^i
+                        }
                     }
-                }
-            })
+                })
+            }
 
             return @save_state::{
                 sum: sum,

@@ -11,5 +11,7 @@ for i in 0..states.bits.length {
 
 frames(3) // 3 frames is the min
 
-states.save(states.sum + 1)
+states.save(states.sum + 1) // wtf this literally consumes 1000 groups
+// states.save(10) // this one is basically free
+
 @log::runtime::flash()
