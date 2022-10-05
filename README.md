@@ -1,8 +1,9 @@
 # SAVE-STATE
 
-Saves a bit across attempts.
+Saves bits across attempts.
 
-*currently only 1 bit works*
+Currently it works up to 4 bits.
+When reaching number 16, it skips to [number 17](https://youtu.be/vPKynTlqqdM) and bricks all the triggers.
 
 ```spwn
 import "save-state"
@@ -11,7 +12,7 @@ state = @save_state::new()
 
 state.sum.display(100, 100)
 
-wait(0.05) // waiting at least 0.03 seconds from the beginning of the level is ideal
+wait(0.05) // waiting at least 0.05 seconds (3 frames) from the beginning of the level is ideal
 
 if state.sum == 0 {
     state.save(1)

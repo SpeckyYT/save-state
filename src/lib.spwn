@@ -25,19 +25,47 @@ hitbox_ids = (index: @number = 0) => {
     b: ?b if index == 0 else default_hitboxes[index - 1],
 }
 
-update_section = (group: @group) {
-    -> group.move(x = section_move, y = 0, duration = 0)
-    -> group.move(x = -section_move, y = 0, duration = 0.01)
+run_0g_code = (code: @macro) {
+    $.extend_trigger_func(0g, code)
 }
 
--> () {
-    frames(1)
-    let @save_state_global::first_frame = $.trigger_fn_context()
-} ()
--> () {
-    frames(3)
-    let @save_state_global::third_frame = $.trigger_fn_context()
-} ()
+run_0g_code((){
+    let @save_state_global::update_section_gropus = []
+})
+
+find = (array: @array, macro: (_) -> @bool) {
+    for i in 0..array.length {
+        if macro(array[i]) { return array[i] } 
+    }
+    return null
+}
+
+update_section = (group: @group) {
+    let cache = find(@save_state_global::update_section_gropus, v => v[0] == group)
+
+    if cache == null {
+        func = !{
+            -> group.move(x = section_move, y = 0, duration = 0)
+            -> group.move(x = -section_move, y = 0, duration = 0.01)
+        }
+        run_0g_code(() {
+            @save_state_global::update_section_gropus.push([group, func])
+        })
+    } else {
+        cache[1]!
+    }
+}
+
+run_0g_code(() {
+    -> () {
+        frames(1)
+        let @save_state_global::first_frame = $.trigger_fn_context()
+    } ()
+    -> () {
+        frames(3)
+        let @save_state_global::third_frame = $.trigger_fn_context()
+    } ()
+})
 
 type @save_state
 impl @save_state {
@@ -53,7 +81,7 @@ impl @save_state {
             hitbox(c.b, c.g).with(Y, 60 + offset.y).add()
             hitbox(a.b, a.g).with(Y, 0 + offset.y).with(DYNAMIC_BLOCK, true).add()
 
-            bit = counter(bits = 1)
+            bit = counter(bits = 1, reset = false)
             setup_count++
 
             $.extend_trigger_func(0g, (){
@@ -85,7 +113,7 @@ impl @save_state {
             let states = []
             for i in 0..bits { states.push(@save_state::new(bits = 1)) }
 
-            sum = counter(bits = bits)
+            sum = counter(bits = bits, reset = false)
 
             if create_sum {
                 $.extend_trigger_func(@save_state_global::third_frame, (){
@@ -118,6 +146,11 @@ impl @save_state {
                 }
             }(),
             @counter: (){
+                // tested .to_const(), it's extremely good with caching
+                numb = value.to_const(0..self.bits.length)
+                self.save(numb)
+
+                /*
                 clone = value.clone()
                 for i in 0..self.bits.length {
                     remainder = counter(bits = 1)
@@ -129,6 +162,7 @@ impl @save_state {
                         update_section(self.block_c[i].g)
                     }
                 }
+                */
             }(),
         }
     },
